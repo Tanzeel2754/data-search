@@ -2,14 +2,30 @@
 
 import * as React from "react"
 import * as XLSX from "xlsx"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function Home() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [headers, setHeaders] = React.useState<string[]>([])
   const [rows, setRows] = React.useState<Array<Array<string | number>>>([])
   const [query, setQuery] = React.useState("")
   const [fileName, setFileName] = React.useState("")
+
+  React.useEffect(() => {
+    if (status === "loading") return // Still loading
+    if (!session) {
+      router.push("/login")
+    }
+  }, [session, status, router])
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" })
+  }
 
   const handleFile = async (file: File) => {
     if (!file) return
@@ -83,9 +99,50 @@ export default function Home() {
     [query]
   )
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
+
   return (
     <div className="p-4 space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/KPK_Police_Logo.svg.png"
+            alt="Khyber Pakhtunkhwa Police Logo"
+            width={48}
+            height={48}
+            className="rounded-full"
+            priority
+          />
+          <h1 className="text-2xl font-bold text-gray-800">PRMS & CRO OFFICE SADDA LOWER KURRAM</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">Welcome, {session.user?.name || session.user?.email}</span>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+      
+       
+       <hr className="border-gray-300 mb-6" />
+       <div className="flex justify-center items-center mb-4">
+       <h1 className="text-2xl font-bold text-gray-800 underline">BACKGROUND CHECK SYSTEM</h1>
+       </div>
+       
+       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           type="file"
           accept=".xlsx,.xls"
