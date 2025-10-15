@@ -63,6 +63,26 @@ export default function Home() {
     return rows.filter(row => row.some(cell => String(cell ?? "").toLowerCase().includes(q)))
   }, [rows, query])
 
+  // Highlight matching query text within cell content
+  const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const renderHighlighted = React.useCallback(
+    (text: string) => {
+      if (!query.trim()) return text
+      const pattern = new RegExp(`(${escapeRegExp(query)})`, "gi")
+      const parts = text.split(pattern)
+      return parts.map((part, idx) =>
+        pattern.test(part) ? (
+          <mark key={idx} className="bg-yellow-300 text-black px-0.5 rounded">
+            {part}
+          </mark>
+        ) : (
+          <React.Fragment key={idx}>{part}</React.Fragment>
+        )
+      )
+    },
+    [query]
+  )
+
   return (
     <div className="p-4 space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -70,16 +90,24 @@ export default function Home() {
           type="file"
           accept=".xlsx,.xls"
           onChange={onInputChange}
+          className="border border-blue-300 rounded px-2 py-1 bg-white text-blue-900 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
         <input
-          className="border rounded px-2 py-1 w-full sm:w-64"
+          className="border border-yellow-400 rounded px-2 py-1 w-full sm:w-64 bg-yellow-100 placeholder:text-yellow-700/70 focus:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           placeholder="Search across all cells"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          className="px-3 py-1 rounded border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-400 active:bg-rose-200"
+        >
+          Clear
+        </button>
       </div>
 
-      <Table>
+      <Table className="border border-gray-300 rounded-md overflow-hidden shadow-sm">
         {fileName ? (
           <TableCaption>
             {fileName} — {filtered.length} row{filtered.length === 1 ? "" : "s"}
@@ -87,24 +115,33 @@ export default function Home() {
         ) : (
           <TableCaption>Upload an .xlsx file to display its contents</TableCaption>
         )}
-        <TableHeader>
-          <TableRow>
+        <TableHeader className="bg-blue-50">
+          <TableRow className="bg-blue-50">
             {headers.map((h, i) => (
-              <TableHead key={i}>{h}</TableHead>
+              <TableHead key={i} className="border border-blue-200 bg-blue-50 text-blue-900">
+                {h}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {filtered.map((r, ri) => (
-            <TableRow key={ri}>
+            <TableRow
+              key={ri}
+              className={ri % 2 === 0 ? "bg-white" : "bg-gray-50"}
+            >
               {headers.map((_, ci) => (
-                <TableCell key={ci}>{String(r[ci] ?? "")}</TableCell>
+                <TableCell key={ci} className="border border-gray-200">
+                  {renderHighlighted(String(r[ci] ?? ""))}
+                </TableCell>
               ))}
             </TableRow>
           ))}
           {headers.length > 0 && filtered.length === 0 && (
             <TableRow>
-              <TableCell colSpan={headers.length}>No matching rows</TableCell>
+              <TableCell colSpan={headers.length} className="text-center text-gray-600">
+                No matching rows
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
