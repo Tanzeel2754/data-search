@@ -164,7 +164,10 @@ export default function Home() {
         </button>
       </div>
 
-      <Table className="border border-gray-300 rounded-md overflow-hidden shadow-sm">
+      <Table
+        className="border border-gray-300 rounded-md shadow-sm"
+        containerClassName="max-h-[60vh] overflow-y-auto"
+      >
         {fileName ? (
           <TableCaption>
             {fileName} — {filtered.length} row{filtered.length === 1 ? "" : "s"}
@@ -172,10 +175,10 @@ export default function Home() {
         ) : (
           <TableCaption>Upload an .xlsx file to display its contents</TableCaption>
         )}
-        <TableHeader className="bg-blue-50">
+        <TableHeader className="bg-blue-50 sticky top-0 z-10">
           <TableRow className="bg-blue-50">
             {headers.map((h, i) => (
-              <TableHead key={i} className="border border-blue-200 bg-blue-50 text-blue-900">
+              <TableHead key={i} className="border border-blue-200 bg-blue-50 text-blue-900 sticky top-0">
                 {h}
               </TableHead>
             ))}
